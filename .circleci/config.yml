@@ -7,8 +7,7 @@ jobs:
     steps:
       - checkout
       - run: npm install
-      - setup_remote_docker:
-          version: 20.10.14
+      - setup_remote_docker  # ✅ Fix: as a plain string, no colon, no mapping
       - run: |
           docker build -t mohit682/node-app:latest .
           echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
@@ -27,5 +26,3 @@ workflows:
           filters:
             branches:
               only: master
-
-
