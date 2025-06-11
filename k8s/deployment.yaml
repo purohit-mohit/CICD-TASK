@@ -15,5 +15,6 @@ spec:
       containers:
         - name: node-app
           image: mohit682/node-app:latest
+          imagePullPolicy: Always   # 👈 This forces Kubernetes to pull the image from Docker Hub
           ports:
             - containerPort: 3000
