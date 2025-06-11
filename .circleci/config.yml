@@ -30,22 +30,21 @@ jobs:
             KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
             echo "✅ Latest version: $KUBECTL_VERSION"
 
-            echo "📦 Downloading kubectl binary..."
+            echo "📦 Downloading kubectl..."
             curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 
             echo "🔒 Making kubectl executable..."
             chmod +x kubectl
 
-            echo "📁 Moving kubectl to \$HOME/bin..."
+            echo "📁 Moving kubectl to \$HOME/bin and exporting PATH..."
             mkdir -p $HOME/bin
             mv kubectl $HOME/bin/kubectl
-
-            echo "🛣️ Updating PATH..."
             echo 'export PATH=$HOME/bin:$PATH' >> $BASH_ENV
-            source $BASH_ENV
+            echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+            export PATH=$HOME/bin:$PATH
 
-            echo "🔍 Verifying kubectl installation..."
-            $HOME/bin/kubectl version --client
+            echo "🔍 Verifying kubectl..."
+            kubectl version --client || { echo "❌ kubectl install failed"; exit 1; }
 
       - run:
           name: Deploy to Kubernetes
