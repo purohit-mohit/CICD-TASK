@@ -16,24 +16,41 @@ jobs:
       - run:
           name: Docker Build and Push
           command: |
+            echo "🔧 Building Docker image..."
             docker build -t mohit682/node-app:latest .
+            echo "🔑 Logging in to DockerHub..."
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            echo "📤 Pushing Docker image..."
             docker push mohit682/node-app:latest
 
       - run:
           name: Install kubectl safely
           command: |
-            mkdir -p $HOME/bin
-            curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            echo "📥 Fetching latest kubectl version..."
+            KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+            echo "✅ Latest version: $KUBECTL_VERSION"
+
+            echo "📦 Downloading kubectl binary..."
+            curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+
+            echo "🔒 Making kubectl executable..."
             chmod +x kubectl
+
+            echo "📁 Moving kubectl to \$HOME/bin..."
+            mkdir -p $HOME/bin
             mv kubectl $HOME/bin/kubectl
+
+            echo "🛣️ Updating PATH..."
             echo 'export PATH=$HOME/bin:$PATH' >> $BASH_ENV
             source $BASH_ENV
+
+            echo "🔍 Verifying kubectl installation..."
+            $HOME/bin/kubectl version --client
 
       - run:
           name: Deploy to Kubernetes
           command: |
-            kubectl version --client
+            echo "🚀 Deploying to Kubernetes..."
             kubectl apply -f k8s/deployment.yaml
             kubectl apply -f k8s/service.yaml
 
