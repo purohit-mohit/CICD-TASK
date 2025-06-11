@@ -6,20 +6,29 @@ jobs:
       - image: cimg/node:18.17.1
     steps:
       - checkout
-      - run: npm install
+
+      - run:
+          name: Install Dependencies
+          command: npm install
+
       - setup_remote_docker
+
       - run:
           name: Docker Build and Push
           command: |
             docker build -t mohit682/node-app:latest .
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push mohit682/node-app:latest
+
       - run:
           name: Install kubectl
           command: |
             curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
+            mv kubectl /usr/local/bin/kubectl || mv kubectl /tmp/kubectl
+            echo 'export PATH=$PATH:/tmp' >> $BASH_ENV
+            source $BASH_ENV
+
       - run:
           name: Deploy to Kubernetes
           command: |
