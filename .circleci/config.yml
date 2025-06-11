@@ -21,9 +21,9 @@ jobs:
 
 workflows:
   version: 2
-  deploy-on-main:
+  deploy-on-master:
     jobs:
       - build-and-deploy:
           filters:
             branches:
-              only: main
+              only: master
