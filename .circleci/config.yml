@@ -7,11 +7,19 @@ jobs:
     steps:
       - checkout
       - run: npm install
-      - setup_remote_docker  # ✅ Fix: as a plain string, no colon, no mapping
-      - run: |
-          docker build -t mohit682/node-app:latest .
-          echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-          docker push mohit682/node-app:latest
+      - setup_remote_docker
+      - run:
+          name: Docker Build and Push
+          command: |
+            docker build -t mohit682/node-app:latest .
+            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            docker push mohit682/node-app:latest
+      - run:
+          name: Install kubectl
+          command: |
+            curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
       - run:
           name: Deploy to Kubernetes
           command: |
