@@ -27,21 +27,20 @@ jobs:
           name: Install kubectl safely
           command: |
             echo "📥 Fetching latest kubectl version..."
-            KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+            KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt) || { echo "❌ Failed to fetch version"; exit 1; }
             echo "✅ Latest version: $KUBECTL_VERSION"
 
             echo "📦 Downloading kubectl..."
-            curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+            curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" || { echo "❌ Download failed"; exit 1; }
 
             echo "🔒 Making kubectl executable..."
-            chmod +x kubectl
+            chmod +x kubectl || { echo "❌ chmod failed"; exit 1; }
 
-            echo "📁 Moving kubectl to \$HOME/bin and exporting PATH..."
+            echo "📁 Moving kubectl to \$HOME/bin and updating PATH..."
             mkdir -p $HOME/bin
-            mv kubectl $HOME/bin/kubectl
+            mv kubectl $HOME/bin/kubectl || { echo "❌ Move failed"; exit 1; }
             echo 'export PATH=$HOME/bin:$PATH' >> $BASH_ENV
-            echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
-            export PATH=$HOME/bin:$PATH
+            source $BASH_ENV
 
             echo "🔍 Verifying kubectl..."
             kubectl version --client || { echo "❌ kubectl install failed"; exit 1; }
