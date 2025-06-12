@@ -1,14 +1,31 @@
 version: 2.1
 
 jobs:
-  build-and-deploy:
+  test:
     docker:
       - image: cimg/node:18.17.1
     steps:
       - checkout
       - run: npm install
-      - setup_remote_docker:
-          version: 20.10.14
+      - run: npm test  # Optional: only if you have tests
+
+  build:
+    docker:
+      - image: cimg/node:18.17.1
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run build  # if applicable
+
+  hold_for_approval:
+    type: approval
+
+  deploy:
+    docker:
+      - image: cimg/node:18.17.1
+    steps:
+      - checkout
+      - setup_remote_docker
       - run: |
           docker build -t mohit682/node-app:latest .
           echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
@@ -21,9 +38,29 @@ jobs:
 
 workflows:
   version: 2
-  deploy-on-main:
+
+  dev-workflow:
     jobs:
-      - build-and-deploy:
+      - test:
           filters:
             branches:
-              only: main
+              only: dev
+      - build:
+          requires:
+            - test
+          filters:
+            branches:
+              only: dev
+      - hold_for_approval:
+          type: approval
+          requires:
+            - build
+          filters:
+            branches:
+              only: dev
+      - deploy:
+          requires:
+            - hold_for_approval
+          filters:
+            branches:
+              only: dev
