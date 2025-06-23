@@ -26,6 +26,11 @@ jobs:
     steps:
       - add_ssh_keys
       - run:
+          name: Accept GitHub Host Automatically
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - run:
           name: Merge dev into master
           command: |
             git config --global user.email "ci-bot@example.com"
