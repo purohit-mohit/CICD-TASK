@@ -20,6 +20,22 @@ jobs:
   hold_for_approval:
     type: approval
 
+  merge_to_master:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - add_ssh_keys
+      - run:
+          name: Merge dev into master
+          command: |
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git clone git@github.com:purohit-mohit/CICD-TASK.git
+            cd CICD-TASK
+            git checkout master
+            git merge origin/dev --no-edit
+            git push origin master
+
   deploy:
     docker:
       - image: cimg/node:18.17.1
@@ -33,6 +49,7 @@ jobs:
 
 workflows:
   version: 2
+
   dev-workflow:
     jobs:
       - test:
@@ -40,21 +57,25 @@ workflows:
             branches:
               only: dev
       - build:
-          requires:
-            - test
+          requires: [test]
           filters:
             branches:
               only: dev
       - hold_for_approval:
           type: approval
-          requires:
-            - build
+          requires: [build]
           filters:
             branches:
               only: dev
+      - merge_to_master:
+          requires: [hold_for_approval]
+          filters:
+            branches:
+              only: dev
+
+  prod-workflow:
+    jobs:
       - deploy:
-          requires:
-            - hold_for_approval
           filters:
             branches:
-              only: dev
+              only: master
