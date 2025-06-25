@@ -9,7 +9,9 @@ jobs:
       - run:
           name: Install Dependencies
           command: npm install
-      - run: npm test
+      - run:
+          name: Run Tests
+          command: npm test
 
   build:
     docker:
@@ -17,7 +19,9 @@ jobs:
     steps:
       - checkout
       - run: npm install
-      - run: echo "No build script defined"
+      - run:
+          name: Build Step
+          command: echo "No build script defined"
 
   hold_for_approval:
     type: approval
@@ -71,18 +75,21 @@ workflows:
             branches:
               only: dev
       - build:
-          requires: [test]
+          requires:
+            - test
           filters:
             branches:
               only: dev
       - hold_for_approval:
           type: approval
-          requires: [build]
+          requires:
+            - build
           filters:
             branches:
               only: dev
       - merge_to_master:
-          requires: [hold_for_approval]
+          requires:
+            - hold_for_approval
           filters:
             branches:
               only: dev
