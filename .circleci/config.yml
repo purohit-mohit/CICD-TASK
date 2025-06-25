@@ -1,35 +1,95 @@
 version: 2.1
 
 jobs:
-  build-and-deploy:
+  test:
     docker:
       - image: cimg/node:18.17.1
     steps:
       - checkout
-
       - run:
           name: Install Dependencies
           command: npm install
+      - run: npm test
 
+  build:
+    docker:
+      - image: cimg/node:18.17.1
+    steps:
+      - checkout
+      - run: npm install
+      - run: echo "No build script defined"
+
+  hold_for_approval:
+    type: approval
+
+  merge_to_master:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - add_ssh_keys
+      - run:
+          name: Accept GitHub Host Automatically
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - run:
+          name: Merge dev into master
+          command: |
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git clone git@github.com:purohit-mohit/CICD-TASK.git
+            cd CICD-TASK
+            git checkout master
+            git merge origin/dev --no-edit
+            git push origin master
+
+  deploy:
+    docker:
+      - image: cimg/node:18.17.1
+    steps:
+      - checkout
       - setup_remote_docker
-
       - run:
           name: Docker Build and Push
           command: |
             echo "🔧 Building Docker image..."
             docker build -t mohit682/node-app:latest .
-            
+
             echo "🔑 Logging in to DockerHub..."
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            
+
             echo "📤 Pushing Docker image..."
             docker push mohit682/node-app:latest
 
 workflows:
   version: 2
-  deploy-on-master:
+
+  dev-workflow:
     jobs:
-      - build-and-deploy:
+      - test:
+          filters:
+            branches:
+              only: dev
+      - build:
+          requires: [test]
+          filters:
+            branches:
+              only: dev
+      - hold_for_approval:
+          type: approval
+          requires: [build]
+          filters:
+            branches:
+              only: dev
+      - merge_to_master:
+          requires: [hold_for_approval]
+          filters:
+            branches:
+              only: dev
+
+  prod-workflow:
+    jobs:
+      - deploy:
           filters:
             branches:
               only: master
