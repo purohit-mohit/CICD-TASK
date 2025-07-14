@@ -65,6 +65,30 @@ jobs:
             echo "📤 Pushing Docker image..."
             docker push mohit682/node-app:latest
 
+  deploy_to_k8s:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install kubectl
+          command: |
+            sudo apt-get update && sudo apt-get install -y curl
+            curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+      - run:
+          name: Set up kubeconfig
+          command: |
+            mkdir -p ~/.kube
+            echo "$KUBECONFIG_DATA" | base64 -d > ~/.kube/config
+      - run:
+          name: Apply K8s Deployment
+          command: |
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/service.yaml
+
 workflows:
   version: 2
 
@@ -97,6 +121,12 @@ workflows:
   prod-workflow:
     jobs:
       - deploy:
+          filters:
+            branches:
+              only: master
+      - deploy_to_k8s:
+          requires:
+            - deploy
           filters:
             branches:
               only: master
