@@ -30,7 +30,9 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - add_ssh_keys
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:lrGR7kgaP22tVAt+BiH6Wi8hVFT664HUnT2HrsYFWtU"  # 🔐 Update this!
       - run:
           name: Accept GitHub Host Automatically
           command: |
@@ -105,7 +107,6 @@ workflows:
             branches:
               only: dev
       - hold_for_approval:
-          type: approval
           requires:
             - build
           filters:
