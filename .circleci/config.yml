@@ -67,7 +67,7 @@ jobs:
             echo "📤 Pushing Docker image..."
             docker push mohit682/node-app:latest
 
-    deploy_to_k8s:
+  deploy_to_k8s:
     docker:
       - image: cimg/base:stable
     steps:
