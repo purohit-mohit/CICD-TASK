@@ -32,7 +32,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:lrGR7kgaP22tVAt+BiH6Wi8hVFT664HUnT2HrsYFWtU"  # 🔐 Update this!
+            - "SHA256:lrGR7kgaP22tVAt+BiH6Wi8hVFT664HUnT2HrsYFWtU"
       - run:
           name: Accept GitHub Host Automatically
           command: |
@@ -76,8 +76,11 @@ jobs:
       - run:
           name: Install kubectl
           command: |
+            set -eo pipefail
             sudo apt-get update && sudo apt-get install -y curl
-            curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            K8S_VERSION="$(curl -L -s https://dl.k8s.io/release/stable.txt)"
+            echo "Latest Kubernetes version: ${K8S_VERSION}"
+            curl -L -o kubectl "https://dl.k8s.io/release/${K8S_VERSION}/bin/linux/amd64/kubectl"
             chmod +x kubectl
             sudo mv kubectl /usr/local/bin/
       - run:
